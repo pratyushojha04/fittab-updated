@@ -1,0 +1,368 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercise Monitor - FitTab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_exercise.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-dumbbell"></i> FitTab Exercise Monitor</h1>
+        <button class="nav-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <nav>
+            <div class="nav-menu">
+                <a href="{{ url_for('info') }}"><i class="fas fa-home"></i> Home</a>
+                <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a>
+                <a href="{{ url_for('workouts') }}"><i class="fas fa-history"></i> History</a>
+                <a href="{{ url_for('diet') }}"><i class="fas fa-utensils"></i> Diet</a>
+                <a href="{{ url_for('index') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="content">
+        <h2><i class="fas fa-camera"></i> Real-time Exercise Analysis</h2>
+        
+        <div class="exercise-selector">
+            <label for="exercise-select"><i class="fas fa-dumbbell"></i> Select Exercise:</label>
+            <select id="exercise-select" onchange="updateExerciseInfo()">
+                {% for exercise in exercises %}
+                <option value="{{ exercise.id }}">{{ exercise.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="exercise-info" class="exercise-info">
+            <h3><i class="fas fa-info-circle"></i> Exercise Information</h3>
+            <div id="exercise-description"></div>
+            <div id="exercise-instructions"></div>
+        </div>
+
+        <div id="camera">
+            <canvas id="videoCanvas"></canvas>
+        </div>
+        
+        <button onclick="startCamera()" class="start-button">
+            <i class="fas fa-play"></i> Start Exercise Monitor
+        </button>
+
+        <div class="exercise-tips">
+            <h3><i class="fas fa-lightbulb"></i> Exercise Tips</h3>
+            <ul>
+                <li>Keep your back straight during exercises</li>
+                <li>Maintain proper form for maximum effectiveness</li>
+                <li>Stay within the camera frame for accurate tracking</li>
+                <li>Take breaks when needed</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FitTab - Your Personal Fitness Companion <i class="fas fa-heart"></i></p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
+    <script>
+        let exercises = {};
+        
+        // Fetch exercise data when page loads
+        fetch('/api/exercises')
+            .then(response => response.json())
+            .then(data => {
+                exercises = data.reduce((acc, exercise) => {
+                    acc[exercise.id] = exercise;
+                    return acc;
+                }, {});
+                updateExerciseInfo();
+            });
+
+        function updateExerciseInfo() {
+            const select = document.getElementById('exercise-select');
+            const exercise = exercises[select.value];
+            
+            if (exercise) {
+                document.getElementById('exercise-description').innerHTML = `
+                    <p><strong>Description:</strong> ${exercise.description}</p>
+                `;
+                document.getElementById('exercise-instructions').innerHTML = `
+                    <p><strong>Instructions:</strong></p>
+                    <ol>
+                        ${exercise.instructions.split('\n').map(instruction => 
+                            `<li>${instruction}</li>`
+                        ).join('')}
+                    </ol>
+                `;
+            }
+        }
+    </script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Exercise Monitor - FitTab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_exercise.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Small helpers if not present in your CSS */
+        .controls { display:flex; gap:8px; align-items:center; margin-top:12px; }
+        .counter { display:flex; gap:6px; align-items:center; }
+        .counter button { padding:6px 8px; cursor:pointer; }
+        .save-button { margin-left:12px; padding:8px 12px; cursor:pointer; }
+        #exercise-info p { margin:6px 0; }
+        #camera { margin-top:16px; }
+    </style>
+</head>
+<!-- Snackbar container for set notifications -->
+<div id="snackbar" aria-live="polite" style="display:none;"></div>
+
+<body>
+    <header>
+        <h1><i class="fas fa-dumbbell"></i> FitTab Exercise Monitor</h1>
+        <button class="nav-toggle" aria-label="Toggle navigation">
+            <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <nav>
+            <div class="nav-menu">
+                <a href="{{ url_for('info') }}"><i class="fas fa-home"></i> Home</a>
+                <a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a>
+                <a href="{{ url_for('workouts') }}"><i class="fas fa-history"></i> History</a>
+                <a href="{{ url_for('diet') }}"><i class="fas fa-utensils"></i> Diet</a>
+                <a href="{{ url_for('index') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="content">
+        <h2><i class="fas fa-camera"></i> Real-time Exercise Analysis</h2>
+        
+        <div class="exercise-selector">
+            <label for="exercise-select"><i class="fas fa-dumbbell"></i> Select Exercise:</label>
+            <select id="exercise-select" onchange="updateExerciseInfo()">
+                {% for exercise in exercises %}
+                <option value="{{ exercise.id }}">{{ exercise.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="exercise-info" class="exercise-info">
+            <h3><i class="fas fa-info-circle"></i> Exercise Information</h3>
+            <div id="exercise-description"></div>
+            <div id="exercise-instructions"></div>
+        </div>
+
+        <div id="camera">
+            <canvas id="videoCanvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <button onclick="startCamera()" class="start-button">
+                <i class="fas fa-play"></i> Start Exercise Monitor
+            </button>
+
+            <!-- Save Data button -->
+            <button id="save-data-btn" class="save-button">
+                <i class="fas fa-save"></i> Save Data
+            </button>
+
+            <!-- Manual counters for quick testing (camera.js should update window.currentReps instead) -->
+            <div class="counter">
+                <label>Sets</label>
+                <button type="button" class="small-button" onclick="changeSets(-1)">-</button>
+                <span id="sets-display" class="counter-value">1</span>
+                <button type="button" class="small-button" onclick="changeSets(1)">+</button>
+            </div>
+
+
+            
+            <div class="counter">
+                <label>Weight</label>
+                <button type="button" class="small-button" onclick="changeWeight(-0.5)">-</button>
+                <span id="weight-display" class="counter-value">--</span>
+                <button type="button" class="small-button" onclick="changeWeight(0.5)">+</button>
+            </div>
+
+
+        </div>
+
+        <div class="exercise-tips">
+            <h3><i class="fas fa-lightbulb"></i> Exercise Tips</h3>
+            <ul>
+                <li>Keep your back straight during exercises</li>
+                <li>Maintain proper form for maximum effectiveness</li>
+                <li>Stay within the camera frame for accurate tracking</li>
+                <li>Take breaks when needed</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 FitTab - Your Personal Fitness Companion <i class="fas fa-heart"></i></p>
+    </footer>
+
+    <!-- existing scripts (camera and nav) -->
+    <script src="{{ url_for('static', filename='js/camera.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
+
+    <script>
+        // State that camera.js can update: window.currentReps, window.currentSets, window.currentWeight
+        window.currentReps = 0;
+        window.currentSets = 1;
+        window.currentWeight = null; // null means not provided
+
+        // Simple helpers to update displays (keeps manual test controls in sync)
+       function renderCounters() {
+            // Reps UI removed — reps are taken from the automatic model (window.currentReps)
+            document.getElementById('sets-display').innerText = window.currentSets;
+            document.getElementById('weight-display').innerText = (window.currentWeight === null ? '--' : window.currentWeight);
+        }
+
+        function changeSets(delta) {
+            window.currentSets = Math.max(1, (parseInt(window.currentSets) || 1) + delta);
+            renderCounters();
+        }
+        function changeWeight(delta) {
+            if (window.currentWeight === null) window.currentWeight = 0;
+            // allow 0.5 increments
+            window.currentWeight = Math.round(((parseFloat(window.currentWeight) || 0) + delta) * 10) / 10;
+            if (window.currentWeight < 0) window.currentWeight = 0;
+            renderCounters();
+        }
+
+        // initial render
+        renderCounters();
+
+        // Load exercises from backend when page loads
+        let exercises = {};
+        fetch('/api/exercises')
+            .then(response => response.json())
+            .then(data => {
+                // convert to id->object map and also ensure select options if server-side didn't render them
+                exercises = data.reduce((acc, exercise) => {
+                    acc[exercise.id] = exercise;
+                    return acc;
+                }, {});
+
+                // if server-side didn't render options (defensive), populate them
+                const select = document.getElementById('exercise-select');
+                if (select.options.length === 0) {
+                    for (const ex of data) {
+                        const opt = document.createElement('option');
+                        opt.value = ex.id;
+                        opt.textContent = ex.name;
+                        select.appendChild(opt);
+                    }
+                }
+                updateExerciseInfo();
+            })
+            .catch(err => {
+                console.error('Failed to fetch exercises:', err);
+            });
+
+        function updateExerciseInfo() {
+            const select = document.getElementById('exercise-select');
+            const selectedId = select ? select.value : null;
+            const exercise = exercises[selectedId];
+
+            if (exercise) {
+                document.getElementById('exercise-description').innerHTML = `
+                    <p><strong>Description:</strong> ${exercise.description}</p>
+                `;
+                document.getElementById('exercise-instructions').innerHTML = `
+                    <p><strong>Instructions:</strong></p>
+                    <ol>
+                        ${exercise.instructions.split('\n').map(instruction =>
+                            `<li>${instruction.trim()}</li>`
+                        ).join('')}
+                    </ol>
+                `;
+            } else {
+                document.getElementById('exercise-description').innerHTML = '';
+                document.getElementById('exercise-instructions').innerHTML = '';
+            }
+        }
+
+        // Save button logic: sends JSON to /save_using_automatic
+        document.getElementById('save-data-btn').addEventListener('click', async () => {
+            const select = document.getElementById('exercise-select');
+            const exercise = exercises[select.value];
+
+            if (!exercise) {
+                alert('Please select an exercise.');
+                return;
+            }
+
+            // Use window.* variables so camera.js can update these live
+            const payload = {
+                exercise: exercise.name,
+                sets: window.currentSets,
+                reps: window.currentReps,
+                weight: (window.currentWeight === null ? null : window.currentWeight)
+            };
+
+            try {
+                const res = await fetch('/save_using_automatic', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    // Quick UI feedback; you can replace with toast/snackbar later
+                    alert('Workout saved successfully!');
+                    // Optionally reset reps after successful save:
+                    // window.currentReps = 0; renderCounters();
+                } else if (res.status === 401) {
+                    alert('You must be logged in to save workouts. Please log in and try again.');
+                } else {
+                    alert('Failed to save workout: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                console.error('Error saving workout:', err);
+                alert('Error saving workout. See console for details.');
+            }
+        });
+
+        // Expose a friendly API so camera.js can call e.g. window.updateReps(n)
+        window.updateReps = function (n) {
+            window.currentReps = n;
+            renderCounters();
+        };
+        window.updateSets = function (n) {
+            window.currentSets = n;
+            renderCounters();
+        };
+        window.updateWeight = function (n) {
+            window.currentWeight = n;
+            renderCounters();
+        };
+
+        // Optional: If you want to auto-save when reps changes (example)
+        // window.lastSavedReps = null;
+        // setInterval(() => {
+        //     if (window.currentReps && window.currentReps !== window.lastSavedReps) {
+        //         // call save API automatically (be careful with rate)
+        //         // window.lastSavedReps = window.currentReps;
+        //     }
+        // }, 5000);
+    </script>
+</body>
+</html>
