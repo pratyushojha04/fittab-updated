@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  fittab:
+    build: .
+    container_name: fittab-app
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app               # live code reloading in dev
+      - ./instance:/app/instance   # SQLite DB persistence
+      - ./static/uploads:/app/static/uploads
+    env_file:
+      - .env
+    restart: always
