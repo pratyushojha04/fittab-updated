@@ -1,4 +1,4 @@
-# Fit abs - Fitness Tracking and Workout Analysis Application
+# Fittab - Fitness Tracking and Workout Analysis Application
 
 FitTab is a comprehensive web application built with Flask that helps users track their workouts, analyze exercise form using computer vision, and maintain their fitness journey. The application includes features like real-time pose detection, workout tracking, PDF report generation, and user profile management.
 
