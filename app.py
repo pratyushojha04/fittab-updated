@@ -606,6 +606,9 @@ def save_using_automatic():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+@app.before_first_request
+def initialize_database():
+    db.create_all()
 
 
 if __name__ == '__main__':
