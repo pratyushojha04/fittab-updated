@@ -101,6 +101,8 @@ class Workout(db.Model):
 
 User.workouts = db.relationship('Workout', order_by=Workout.id, back_populates='user')
 
+
+
 class Exercise(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
@@ -552,6 +554,14 @@ def init_exercises():
     
     db.session.commit()
 
+with app.app_context():
+    db.create_all()
+    init_exercises()
+
+
+
+
+
 @app.route('/save_using_automatic', methods=['POST'])
 def save_using_automatic():
     """
@@ -606,13 +616,13 @@ def save_using_automatic():
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-@app.before_first_request
-def initialize_database():
-    db.create_all()
+
+
+
 
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        init_exercises()  # Initialize exercises
+    # with app.app_context():
+    #     db.create_all()
+    #     init_exercises()  # Initialize exercises
     socketio.run(app, host='0.0.0.0', port=10000, debug=True, allow_unsafe_werkzeug=True)
